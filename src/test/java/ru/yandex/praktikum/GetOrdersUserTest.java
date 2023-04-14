@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.yandex.praktikum.model.OrderStellar;
 import ru.yandex.praktikum.model.UserStellar;
+import ru.yandex.praktikum.order.OrderClient;
 import ru.yandex.praktikum.user.UserClient;
 
 import java.util.ArrayList;
@@ -20,78 +21,70 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 
 public class GetOrdersUserTest {
     private UserClient userClient;
+    private OrderClient orderClient;
+
     @Before
-    public void setUp(){
+    public void setUp() {
         userClient = new UserClient();
+        orderClient = new OrderClient();
     }
+
     @Test
     @DisplayName("Получение заказов авторизованного пользователя. Ответ 200")
     @Description("Get запрос на ручку api/orders")
     @Step("Получение заказов")
-    public void getOrderAuthUser(){
-
+    public void getOrderAuthUser() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse responseCreate = userClient.create(userStellar).assertThat().statusCode(HTTP_OK);
-
+        ValidatableResponse responseCreate = userClient.createUser(userStellar).assertThat().statusCode(HTTP_OK);
         String accessTokenWithBearer = responseCreate.extract().path("accessToken");
-        String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
+        String accessToken = accessTokenWithBearer.replace("Bearer ", "");
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add(GeneratorStellar.BUN);
         ingredients.add(GeneratorStellar.FILLING_ONE);
         ingredients.add(GeneratorStellar.FILLING_TWO);
         OrderStellar orderStellar = new OrderStellar(ingredients);
-        ValidatableResponse response = userClient.orderWithAuth(accessToken,orderStellar)
+        ValidatableResponse response = orderClient.orderWithAuth(accessToken, orderStellar)
                 .assertThat().statusCode(HTTP_OK);
-
-        ValidatableResponse responseGetOrders = userClient.getOrderUserAuth(accessToken)
+        ValidatableResponse responseGetOrders = orderClient.getOrderUserAuth(accessToken)
                 .assertThat().statusCode(HTTP_OK);
-        responseGetOrders.assertThat().body("success",equalTo(true))
+        responseGetOrders.assertThat().body("success", equalTo(true))
                 .and()
-                .body("orders",notNullValue());
-
-
+                .body("orders", notNullValue());
     }
 
     @Test
     @DisplayName("Получение заказов не авторизованного пользователя. Ответ 401")
     @Description("Get запрос на ручку api/orders")
     @Step("Получение заказов")
-    public void getOrderNotAuthUser(){
-
+    public void getOrderNotAuthUser() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse responseCreate = userClient.create(userStellar).assertThat().statusCode(HTTP_OK);
-
+        ValidatableResponse responseCreate = userClient.createUser(userStellar).assertThat().statusCode(HTTP_OK);
         String accessTokenWithBearer = responseCreate.extract().path("accessToken");
-        String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
+        String accessToken = accessTokenWithBearer.replace("Bearer ", "");
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add(GeneratorStellar.BUN);
         ingredients.add(GeneratorStellar.FILLING_ONE);
         ingredients.add(GeneratorStellar.FILLING_TWO);
         OrderStellar orderStellar = new OrderStellar(ingredients);
-        ValidatableResponse response = userClient.orderWithAuth(accessToken,orderStellar)
+        ValidatableResponse response = orderClient.orderWithAuth(accessToken, orderStellar)
                 .assertThat().statusCode(HTTP_OK);
-
-        ValidatableResponse responseGetOrders = userClient.getOrderUserNotAuth()
+        ValidatableResponse responseGetOrders = orderClient.getOrderUserNotAuth()
                 .assertThat().statusCode(HTTP_UNAUTHORIZED);
-        responseGetOrders.assertThat().body("success",equalTo(false))
+        responseGetOrders.assertThat().body("success", equalTo(false))
                 .and()
-                .body("message",equalTo("You should be authorised"));
+                .body("message", equalTo("You should be authorised"));
     }
 
     @After
-    public void clearData(){
-        try{
+    public void clearData() {
+        try {
             UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
             ValidatableResponse responseLogin = userClient.loginUser(userStellar);
             String accessTokenWithBearer = responseLogin.extract().path("accessToken");
-            String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
+            String accessToken = accessTokenWithBearer.replace("Bearer ", "");
             userClient.deleteUser(accessToken);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Завершилось без удаления");
         }
     }
-
 }

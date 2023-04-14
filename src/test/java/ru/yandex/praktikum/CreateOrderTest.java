@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.yandex.praktikum.model.OrderStellar;
 import ru.yandex.praktikum.model.UserStellar;
+import ru.yandex.praktikum.order.OrderClient;
 import ru.yandex.praktikum.user.UserClient;
 
 import java.util.ArrayList;
@@ -18,35 +19,38 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 public class CreateOrderTest {
     private UserClient userClient;
+    private OrderClient orderClient;
+
     @Before
-    public void setUp(){
+    public void setUp() {
         userClient = new UserClient();
+        orderClient = new OrderClient();
     }
+
     @Test
     @DisplayName("Создание заказа без авторизации. Ответ 200")
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
-    public void createOrderWithoutAuth(){
+    public void createOrderWithoutAuth() {
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add(GeneratorStellar.BUN);
         ingredients.add(GeneratorStellar.FILLING_ONE);
         ingredients.add(GeneratorStellar.FILLING_TWO);
-        
         OrderStellar orderStellar = new OrderStellar(ingredients);
-        ValidatableResponse response = userClient.orderWithoutAuth(orderStellar)
+        ValidatableResponse response = orderClient.orderWithoutAuth(orderStellar)
                 .assertThat().statusCode(HTTP_OK);
     }
+
     @Test
     @DisplayName("Создание заказа без авторизации, c неверным хешем. Ответ 500")
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
-    public void createOrderWithoutAuthErrorHash(){
+    public void createOrderWithoutAuthErrorHash() {
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add(GeneratorStellar.BAD_BUN);
         ingredients.add(GeneratorStellar.FILLING_ONE);
-
         OrderStellar orderStellar = new OrderStellar(ingredients);
-        ValidatableResponse response = userClient.orderWithoutAuth(orderStellar)
+        ValidatableResponse response = orderClient.orderWithoutAuth(orderStellar)
                 .assertThat().statusCode(HTTP_INTERNAL_ERROR);
     }
 
@@ -54,91 +58,80 @@ public class CreateOrderTest {
     @DisplayName("Создание заказа без авторизации, без ингредиентов. Ответ 500")
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
-    public void createOrderWithoutAuthNoIngredient(){
-
+    public void createOrderWithoutAuthNoIngredient() {
         OrderStellar orderStellar = new OrderStellar(null);
-        ValidatableResponse response = userClient.orderWithoutAuth(orderStellar)
+        ValidatableResponse response = orderClient.orderWithoutAuth(orderStellar)
                 .assertThat().statusCode(HTTP_BAD_REQUEST);
-        response.assertThat().body("success",equalTo(false))
+        response.assertThat().body("success", equalTo(false))
                 .and()
-                .body("message",equalTo("Ingredient ids must be provided"));
+                .body("message", equalTo("Ingredient ids must be provided"));
     }
 
     @Test
     @DisplayName("Создание заказа с авторизацией. Ответ 200")
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
-    public void createOrderWithAuth(){
+    public void createOrderWithAuth() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse responseCreate = userClient.create(userStellar).assertThat().statusCode(HTTP_OK);
+        ValidatableResponse responseCreate = userClient.createUser(userStellar).assertThat().statusCode(HTTP_OK);
         String accessTokenWithBearer = responseCreate.extract().path("accessToken");
-        String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
+        String accessToken = accessTokenWithBearer.replace("Bearer ", "");
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add(GeneratorStellar.BUN);
         ingredients.add(GeneratorStellar.FILLING_ONE);
         ingredients.add(GeneratorStellar.FILLING_TWO);
-
         OrderStellar orderStellar = new OrderStellar(ingredients);
-        ValidatableResponse response = userClient.orderWithAuth(accessToken,orderStellar)
+        ValidatableResponse response = orderClient.orderWithAuth(accessToken, orderStellar)
                 .assertThat().statusCode(HTTP_OK);
-        response.assertThat().body("order.owner.name",equalTo(GeneratorStellar.NAME))
-                            .and()
-                            .body("order.owner.email",equalTo(GeneratorStellar.LOGIN));
+        response.assertThat().body("order.owner.name", equalTo(GeneratorStellar.NAME))
+                .and()
+                .body("order.owner.email", equalTo(GeneratorStellar.LOGIN));
     }
 
     @Test
     @DisplayName("Создание заказа с авторизацией, без ингредиентов. Ответ 400")
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
-    public void createOrderWithAuthNoIngredient(){
+    public void createOrderWithAuthNoIngredient() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse responseCreate = userClient.create(userStellar).assertThat().statusCode(HTTP_OK);
+        ValidatableResponse responseCreate = userClient.createUser(userStellar).assertThat().statusCode(HTTP_OK);
         String accessTokenWithBearer = responseCreate.extract().path("accessToken");
-        String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
+        String accessToken = accessTokenWithBearer.replace("Bearer ", "");
         OrderStellar orderStellar = new OrderStellar(null);
-        ValidatableResponse response = userClient.orderWithAuth(accessToken,orderStellar)
+        ValidatableResponse response = orderClient.orderWithAuth(accessToken, orderStellar)
                 .assertThat().statusCode(HTTP_BAD_REQUEST);
-        response.assertThat().body("success",equalTo(false))
+        response.assertThat().body("success", equalTo(false))
                 .and()
-                .body("message",equalTo("Ingredient ids must be provided"));
-
-
+                .body("message", equalTo("Ingredient ids must be provided"));
     }
 
     @Test
     @DisplayName("Создание заказа с авторизацией с неверным хешем")
     @Description("Post запрос на ручку /api/orders")
     @Step("Создание заказа")
-    public void createOrderWithAuthErrorHash(){
+    public void createOrderWithAuthErrorHash() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse responseCreate = userClient.create(userStellar).assertThat().statusCode(HTTP_OK);
+        ValidatableResponse responseCreate = userClient.createUser(userStellar).assertThat().statusCode(HTTP_OK);
         String accessTokenWithBearer = responseCreate.extract().path("accessToken");
-        String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
+        String accessToken = accessTokenWithBearer.replace("Bearer ", "");
         ArrayList<String> ingredients = new ArrayList<>();
         ingredients.add(GeneratorStellar.BAD_BUN);
         ingredients.add(GeneratorStellar.FILLING_TWO);
-
         OrderStellar orderStellar = new OrderStellar(ingredients);
-        ValidatableResponse response = userClient.orderWithAuth(accessToken,orderStellar)
+        ValidatableResponse response = orderClient.orderWithAuth(accessToken, orderStellar)
                 .assertThat().statusCode(HTTP_INTERNAL_ERROR);
     }
 
     @After
-    public void clearData(){
-        try{
-        UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse responseLogin = userClient.loginUser(userStellar);
-        String accessTokenWithBearer = responseLogin.extract().path("accessToken");
-        String accessToken = accessTokenWithBearer.replace("Bearer ","");
-
-        userClient.deleteUser(accessToken);
-        }catch (Exception e){
+    public void clearData() {
+        try {
+            UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
+            ValidatableResponse responseLogin = userClient.loginUser(userStellar);
+            String accessTokenWithBearer = responseLogin.extract().path("accessToken");
+            String accessToken = accessTokenWithBearer.replace("Bearer ", "");
+            userClient.deleteUser(accessToken);
+        } catch (Exception e) {
             System.out.println("Завершилось без удаления");
         }
     }
-
-
 }

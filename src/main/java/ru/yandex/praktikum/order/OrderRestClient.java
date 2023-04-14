@@ -1,10 +1,10 @@
-package ru.yandex.praktikum.user;
+package ru.yandex.praktikum.order;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
-public class UserRestClient {
+public class OrderRestClient {
     protected static final String BASE_URI = "https://stellarburgers.nomoreparties.site";
 
     protected RequestSpecification getBaseReqSpec() {

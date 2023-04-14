@@ -20,24 +20,24 @@ public class LoginUserTest {
 
     @Before
     @Step("Предусловие.Создание пользователя")
-    public void setUp(){
+    public void setUp() {
         userClient = new UserClient();
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
-        ValidatableResponse response = userClient.create(userStellar);
+        ValidatableResponse response = userClient.createUser(userStellar);
     }
 
     @After
     @Step("Постусловие.Удаление пользователя")
-    public void clearData(){
+    public void clearData() {
         try {
             UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
             ValidatableResponse responseLogin = userClient.loginUser(userStellar);
             String accessTokenWithBearer = responseLogin.extract().path("accessToken");
-            String accessToken = accessTokenWithBearer.replace("Bearer ","");
+            String accessToken = accessTokenWithBearer.replace("Bearer ", "");
 
             ValidatableResponse responseDelete = userClient.deleteUser(accessToken);
             System.out.println("удален");
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Пользователь не удалился. Возможно ошибка при создании");
         }
     }
@@ -46,7 +46,7 @@ public class LoginUserTest {
     @DisplayName("Логин под существующим пользователем. Ответ 200")
     @Description("Post запрос на ручку /api/auth/login")
     @Step("Основной шаг - логин пользователя")
-    public void loginWithUserTrue(){
+    public void loginWithUserTrue() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
         ValidatableResponse responseLogin = userClient.loginUser(userStellar)
                 .assertThat().statusCode(HTTP_OK);
@@ -56,23 +56,23 @@ public class LoginUserTest {
     @DisplayName("Логин под существующим пользователем. Проверка body")
     @Description("Post запрос на ручку /api/auth/login")
     @Step("Основной шаг - логин пользователя")
-    public void loginWithUserTrueCheckBody(){
+    public void loginWithUserTrueCheckBody() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
         ValidatableResponse responseLogin = userClient.loginUser(userStellar);
-        responseLogin.assertThat().body("success",equalTo(true));
-        responseLogin.assertThat().body("accessToken",startsWith("Bearer "))
+        responseLogin.assertThat().body("success", equalTo(true));
+        responseLogin.assertThat().body("accessToken", startsWith("Bearer "))
                 .and()
-                .body("refreshToken",notNullValue());
-        responseLogin.assertThat().body("user.email",equalTo(GeneratorStellar.LOGIN))
+                .body("refreshToken", notNullValue());
+        responseLogin.assertThat().body("user.email", equalTo(GeneratorStellar.LOGIN))
                 .and()
-                .body("user.name",equalTo(GeneratorStellar.NAME));
+                .body("user.name", equalTo(GeneratorStellar.NAME));
     }
 
     @Test
     @DisplayName("Логин под неверным именем почты. Ответ 401")
     @Description("Post запрос на ручку /api/auth/login")
     @Step("Основной шаг - логин пользователя")
-    public void loginWithUserFalse(){
+    public void loginWithUserFalse() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN_TWO, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
         ValidatableResponse responseLogin = userClient.loginUser(userStellar)
                 .assertThat().statusCode(HTTP_UNAUTHORIZED);
@@ -82,19 +82,19 @@ public class LoginUserTest {
     @DisplayName("Логин под неверным именем почты. Проверка body")
     @Description("Post запрос на ручку /api/auth/login")
     @Step("Основной шаг - логин пользователя")
-    public void loginWithUserFalseCheckBody(){
+    public void loginWithUserFalseCheckBody() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN_TWO, GeneratorStellar.PASSWORD, GeneratorStellar.NAME);
         ValidatableResponse responseLogin = userClient.loginUser(userStellar)
-                .assertThat().body("success",equalTo(false))
+                .assertThat().body("success", equalTo(false))
                 .and()
-                .body("message",equalTo("email or password are incorrect"));
+                .body("message", equalTo("email or password are incorrect"));
     }
 
     @Test
     @DisplayName("Логин под неверным паролем. Ответ 401")
     @Description("Post запрос на ручку /api/auth/login")
     @Step("Основной шаг - логин пользователя")
-    public void loginWithUserFalsePassword(){
+    public void loginWithUserFalsePassword() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD_TWO, GeneratorStellar.NAME);
         ValidatableResponse responseLogin = userClient.loginUser(userStellar)
                 .assertThat().statusCode(HTTP_UNAUTHORIZED);
@@ -104,15 +104,13 @@ public class LoginUserTest {
     @DisplayName("Логин под неверным паролем. Проверка body")
     @Description("Post запрос на ручку /api/auth/login")
     @Step("Основной шаг - логин пользователя")
-    public void loginWithUserFalsePasswordCheckBody(){
+    public void loginWithUserFalsePasswordCheckBody() {
         UserStellar userStellar = new UserStellar(GeneratorStellar.LOGIN, GeneratorStellar.PASSWORD_TWO, GeneratorStellar.NAME);
         ValidatableResponse responseLogin = userClient.loginUser(userStellar)
-                .assertThat().body("success",equalTo(false))
+                .assertThat().body("success", equalTo(false))
                 .and()
-                .body("message",equalTo("email or password are incorrect"));
+                .body("message", equalTo("email or password are incorrect"));
     }
-
-
 
 
 }
